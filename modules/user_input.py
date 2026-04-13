@@ -4,6 +4,7 @@ This module contains a function in charge of requesting the product name from th
 
 from rich.prompt import Prompt
 from rich.console import Console
+from modules import error_handler
 
 console = Console()
 
@@ -24,7 +25,6 @@ def get_product_name() -> str:
         if product_name != "" and all(word.isalnum() for word in product_name.split()):
             return product_name
 
-        console.print('No has ingresado un nombre válido, inténtalo de nuevo.', style="red")
-
+        error_handler.handle_error('no_valid_product_name')
 
     
