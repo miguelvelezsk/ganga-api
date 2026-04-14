@@ -15,6 +15,7 @@ def process_data(
             process_price(product)
             process_title(product)
             process_shipping(product)
+            process_rating(product)
             if filter_by_relevance(product, product_name):
                 products_mercado_libre_filtered.append(product)
 
@@ -23,6 +24,7 @@ def process_data(
             process_price(product)
             process_title(product)
             process_shipping(product)
+            process_rating(product)
             if filter_by_relevance(product, product_name):
                 products_exito_filtered.append(product)
 
@@ -74,7 +76,7 @@ def process_price(product: dict[str, str]) -> None:
 
 def process_shipping(product: dict[str, str]) -> None:
     """
-    Processes the shipping of the product.
+    Processes the shipping of the product discarting the extra spaces and the \xa0 character, and setting the shipping to 'Envío gratis' if the shipping is free.
 
     Args:
         product: A product.
@@ -83,6 +85,26 @@ def process_shipping(product: dict[str, str]) -> None:
         None
     """
     product['shipping'] = product['shipping'].strip().replace("\xa0", " ").split("\n")[0]
+    if product['shipping'] == 'NE':
+        product['shipping'] = 'Información no disponible'
+    elif "gratis" in product['shipping'].lower():
+        product['shipping'] = 'Envío gratis'
+
+def process_rating(product: dict[str, str]) -> None:
+    """
+    Processes the rating of the product discarting the extra spaces and the \xa0 character, and setting the rating to 'Sin calificación' if the rating is 'NE'.
+
+    Args:
+        product: A product.
+    
+    Returns:
+        None
+    """
+    product['rating'] = product['rating'].strip().replace("\xa0", " ").split("\n")[0]
+    if product['rating'] == 'NE':
+        product['rating'] = 'Información no disponible'
+    else:
+        product['rating'] = float(product['rating'])
 
 def filter_by_relevance(product: dict[str, str], product_name: str) -> bool:
     """
@@ -175,7 +197,7 @@ def sort_products(products: list[dict[str, int | str]]) -> list[dict[str, int | 
     Returns:
         A list of products sorted by price.
     """
-    return sorted(products, key=lambda x: (x['price'], -(float(x['rating']) if x['rating'] != 'NE' else 0)))
+    return sorted(products, key=lambda x: (x['price'], -(float(x['rating']) if x['rating'] != 'Información no disponible' else 0)))
     
 def get_top_products(products: list[dict[str, int | str]]) -> list[dict[str, int | str]]:
     """
