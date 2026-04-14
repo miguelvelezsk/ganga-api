@@ -1,16 +1,16 @@
 """
-This module contains the logic for scraping Mercado Libre.
+This module contains the logic for scraping Exito.
 """
 
 from playwright.async_api import async_playwright, ElementHandle, Page
 from modules import error_handler
 import sys
 
-URL = "https://listado.mercadolibre.com.co/"
+URL = "https://www.exito.com/s?q="
 
 async def manage_flow(product_name: str) -> list[dict[str, str]]:
     """
-    Manages the flow of the Mercado Libre scraper.
+    Manages the flow of the Exito scraper.
 
     Args:
         product_name (str): The name of the product to search for.
@@ -35,7 +35,7 @@ async def manage_flow(product_name: str) -> list[dict[str, str]]:
 
 async def search_product(page: Page, product_name: str) -> bool:
     """
-    Searches for the product on Mercado Libre.
+    Searches for the product on Exito.
 
     Args:
         page (Page): The page to search on.
@@ -45,15 +45,15 @@ async def search_product(page: Page, product_name: str) -> bool:
     while count_of_attempts <= 3:
         try:
             await page.goto(f'{URL}{product_name}')
-            await page.wait_for_selector('.ui-search-layout', timeout=10000)
-            await page.screenshot(path="./screenshots/product_mercado_libre.jpg")
+            await page.wait_for_selector('.product-grid_fs-product-grid___qKN2', timeout=10000)
+            await page.screenshot(path="./screenshots/product_exito.jpg")
             return True
         except Exception as e:
             if count_of_attempts <= 2:
-                error_handler.handle_error('no_products_found', product_name, 'Mercado Libre', count_of_attempts)
+                error_handler.handle_error('no_products_found', product_name, 'Exito', count_of_attempts)
                 count_of_attempts += 1
             else:
-                error_handler.handle_error('no_products_found_after_attempts', product_name, 'Mercado Libre')
+                error_handler.handle_error('no_products_found_after_attempts', product_name, 'Exito')
                 return False
                 
                 
@@ -69,15 +69,16 @@ async def extract_products(page: Page) -> list[dict[str, str]]:
         list[dict[str, str]]: A list of products found.
     """
     try:
-        products = await page.query_selector_all('.poly-card')
+        products = await page.query_selector_all('.productCard_contentInfo__CBBA7')
         product_list = []
         for product in products:
             product_dict = {}
-            product_dict['title'] = await safe_extract('.poly-component__title', product, 'inner_text')
-            product_dict['price'] = await safe_extract('.poly-component__price', product, 'inner_text')
-            product_dict['link'] = await safe_extract('.poly-component__title', product, 'get_attribute')
-            product_dict['rating'] = await safe_extract('.poly-phrase-label', product, 'inner_text')
-            product_dict['shipping'] = await safe_extract('.poly-component__shipping-v2', product, 'inner_text')
+            product_dict['title'] = await safe_extract('.styles_name__qQJiK', product, 'inner_text')
+            product_dict['price'] = await safe_extract('.ProductPrice_container__price__XmMWA', product, 'inner_text')
+            product_relative_link = await safe_extract('.productCard_productLinkInfo__It3J2', product, 'get_attribute')
+            product_dict['link'] = "https://www.exito.com" + product_relative_link
+            product_dict['rating'] = "NE"
+            product_dict['shipping'] = "NE"
             product_list.append(product_dict)
         return product_list
     except Exception as e:

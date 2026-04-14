@@ -20,7 +20,10 @@ def get_product_name() -> str:
 
     while True:
 
-        product_name = Prompt.ask('\nIngrese el nombre de producto a buscar')
+        product_name = Prompt.ask(
+            '\nIngrese el nombre general del producto a buscar (ej: ipad pro, ps5, laptop gaming) '
+            'no sea muy específico si no es necesario. Evite errores ortográficos para obtener mejores resultados'
+        )
 
         if product_name != "" and all(word.isalnum() for word in product_name.split()):
             return product_name

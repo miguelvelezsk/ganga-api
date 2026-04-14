@@ -2,7 +2,7 @@
 This module contains utility functions.
 """
 
-def format_product_name(product_name: str) -> str:
+def format_product_name(product_name: str, separator: str = "-") -> str:
     """
     Formats the product name for the URL.
 
@@ -12,4 +12,4 @@ def format_product_name(product_name: str) -> str:
     Returns:
         str: The formatted product name.
     """
-    return product_name.replace(" ", "-")
+    return product_name.replace(" ", separator)
