@@ -2,29 +2,21 @@
 
 ## Overview
 
-This script takes a product entered by the user and scrapes two e-commerce: Exito and Mercado Libre, then interacts with Playwright  and returns to the user the information with specific attributes from the best 3 products  from each e-commerce sorted from best to worst based on product’s price and a minimum product rating of 4 out of 5 stars. This information is displayed in cards shape presented in the CLI in spanish language.
+A full-stack application consisting of a FastAPI backend that manages asynchronous Playwright scrapers and a Vite frontend for user interaction. The system emphasizes data integrity through statistical analysis using Numpy.
 
 ## Architecture
 
-### User input
+### Frontend (Vite)
 
-This module requests the product name from the user and clean the product name.
+- **Role:** User interface and request management.
+- **Communication:** Consumes the Backend REST API via asynchronous fetch calls.
+- **State Management:** Handles loading states during the scraping process (avg. 15-20s).
 
-### Mercado Libre scraper
+### Backend (FastAPI + Uvicorn)
 
-This module searches the products on https://listado.mercadolibre.com.co/, and extract the necessary product data.
-
-### Exito scraper
-
-This module searches the products on https://www.exito.com/, and extract the necessary product data.
-
-### Data processing and data cleaning
-
-This module processes and cleans the data with different methods to facilitate data analysis, then the data is sorted and filtered based on metrics such as pricing and product rating
-
-### Results presentation
-
-This module displays the data in Spanish, in a card format to make it more clear for the user.
+- **Role:** Orchestration, data extraction, and processing.
+- **API Layer:** Replaces the previous CLI. Uses Pydantic for data validation and CORS middleware for frontend communication.
+- **Scraping Engine:** Parallel execution of Playwright instances for Mercado Libre and Éxito.
 
 ### Utils
 
@@ -34,25 +26,32 @@ This module contains helper functions and shared constants.
 
 A centralized module that manages user-facing exceptions and system alerts. It uses the Rich library to standardize the visual style of errors in the CLI and supports dynamic string formatting for contextual feedback.
 
+### Data Processing Module (Numpy)
+
+- **Normalization:** Currency string to integer conversion and text sanitization.
+- **Outlier Detection:** * **IQR Filter:** Removes products with anomalous prices.
+    - **Median Logic:** Discards auxiliary items (accessories) priced 20% below the median of the search results.
+
+## Deployment Note
+
+Due to the high CPU and RAM overhead of headless browsers (Playwright), the backend is currently optimized for local execution or dedicated virtual private servers (VPS). Deployment on serverless or shared free-tier platforms is restricted by hardware limitations.
+
 ## Tech Stack
 
 - Python 3.10
 - Playwright 1.58.0
-- Rich 15.0.0
 - Numpy 2.4.4
+- Fastapi 0.136,0
+- Uvicorn 0.45.0
 
 ## Data Flow
 
-1. The user enters the product name in the console.
-2. The scraper modules receive the product name from the input.
-3. The scraper modules  interacts with the page and extract attributes from each web page.
-4. If a request fails, the Scraper invokes the Error Handler.
-5. The Error Handler displays a formatted message. If the error is recoverable (e.g., a retry), the scraper continues; if it is critical (e.g., no network), the handler terminates the execution or returns control to the main loop.
-6. The attributes passes to the next module called processing.
-7. The processing and cleaning modules filter and normalize the data based on the pricing and the product rating.
-8. If no product meets the minimum rating threshold, the system displays a message and shows the best available products.
-9. The data is sent to the module in charge of presenting the data.
-10. The results are displayed as cards on the CLI in Spanish language. 
+1. **Request:** User enters a product in the Vite web app.
+2. **API Call:** Frontend sends a request to `GET /search?product_name={product}`.
+3. **Execution:** FastAPI runs scrapers in parallel using `asyncio.gather`.
+4. **Statistical Cleaning:** Numpy filters the raw data to ensure only relevant products remain.
+5. **Response:** Backend returns a JSON object.
+6. **Display:** Frontend renders product cards with the top 3 results per platform.
 
 ## Error Handling Strategy
 
@@ -66,19 +65,19 @@ A centralized module that manages user-facing exceptions and system alerts. It u
 ## Folder Structure
 
 - /scraping_price_comparison
-    - main.py
-    - requirements.txt
-    - README.md
-    - modules/
-        - __init__.py
-        - user_input.py
-        - data_processing.py
-        - results.py
-        - helpers.py
-        - error_handler.py
-        - scrapers/
+    - backend/
+        - orchestrator.py
+        - main.py
+        - requirements.txt
+        - README.md
+        - modules/
             - __init__.py
-            - mercado_libre_scraper.py
-            - exito_scraper.py
-        - tests/
-            - test_scrapers.py
+            - data_processing.py
+            - helpers.py
+            - error_handler.py
+            - scrapers/
+                - __init__.py
+                - mercado_libre_scraper.py
+                - exito_scraper.py
+            - tests/
+                - test_scrapers.py
