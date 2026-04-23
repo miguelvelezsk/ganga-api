@@ -47,7 +47,6 @@ async def search_product(page: Page, product_name: str) -> bool:
         try:
             await page.goto(f'{URL}{product_name}')
             await page.wait_for_selector('.ui-search-layout', timeout=10000)
-            await page.screenshot(path="./screenshots/product_mercado_libre.jpg")
             return True
         except HTTPException as e:
             raise e
