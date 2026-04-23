@@ -20,7 +20,10 @@ async def manage_flow(product_name: str) -> list[dict[str, str]]:
     """
     try:
         async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch()
+            browser = await playwright.chromium.launch(
+                headless=True,
+                args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-extensions"]
+            )
             context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
             page = await context.new_page()
             is_found = await search_product(page, product_name)
